@@ -8533,8 +8533,10 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 						if v.Value.Type == "NormalElement" then
 							local val = v.Value.Value
 						
-							if type(val) == "boolean" or type(val) == "string" or type(val) == "number" then
-								Value.Functions:SetValue(val)
+							if Value and Value.Functions and Value.Functions.SetValue then
+								if type(val) == "boolean" or type(val) == "string" or type(val) == "number" then
+									Value.Functions:SetValue(val)
+								end
 							end
 						end
 	
