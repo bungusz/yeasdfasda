@@ -8525,18 +8525,19 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 				local Value = Flags[v.Flag]
 	
 				if Value and type(Value) == "table" then
-					if v.Value and v.Value.Type == "NormalElement" then
+					if v.Value.Type == "NormalElement" then
 						local val = v.Value.Value
-	
-						if Value.Functions and type(Value.Functions.SetValue) == "function" then
-							if type(val) == "boolean" or type(val) == "string" or type(val) == "number" then
+					
+						if Value and type(Value) == "table" and Value.Functions and type(Value.Functions.SetValue) == "function" then
+							local current = Value.Functions:GetValue and Value.Functions:GetValue()
+					
+							if current ~= val and type(val) == "boolean" or type(val) == "string" or type(val) == "number" then
 								Value.Functions:SetValue(val)
-							else
-								warn("Unexpected value type for flag:", v.Flag, type(val))
 							end
 						else
-							warn("Missing SetValue function for flag:", v.Flag)
+							warn("Missing or invalid Value.Functions for:", v.Flag)
 						end
+					end
 	
 					elseif v.Value.Type == "ColorPicker" then
 						local col = v.Value.Color3
