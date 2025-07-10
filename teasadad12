@@ -2785,18 +2785,13 @@ function Compkiller:_LoadOption(Value , TabSignal)
 			Blacklist = {}
 		});
 
-		if Config.Flag and Compkiller.Flags[Config.Flag] and Compkiller.Flags[Config.Flag]:GetValue() ~= nil then
-			warn("Keybind for flag '"..Config.Flag.."' is already set to:", Compkiller.Flags[Config.Flag]:GetValue());
-			return Compkiller.Flags[Config.Flag];
-		end
-	
 		local Keybind = Value:AddLink('Keybind' , Config.Default);
+
 		local IsBinding = false;
-	
+
 		local IsBlacklist = function(v)
 			return Config.Blacklist and (Config.Blacklist[v] or table.find(Config.Blacklist,v))
-		end
-
+		end;
 
 		Compkiller:_Input(Keybind.Root,function()
 			if IsBinding then
@@ -8494,50 +8489,76 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 	};
 
 	function Args:WriteConfig(Config: WriteConfig)
-		Config = Compkiller.__CONFIG(Config , {
+		Config = Compkiller.__CONFIG(Config, {
 			Name = "Config",
 			Author = LocalPlayer.Name,
 		});
-
+	
 		local Flags = Compkiller:GetConfig("MK");
-
-		Flags["__INFORMATION"] = {
-			Type = "Information",
-			Author = Config.Author,
-			Name = Config.Name,
-			CreatedDate = Compkiller:GetDate()
+	
+		local Serialized = {
+			__INFORMATION = {
+				Type = "Information",
+				Author = Config.Author,
+				Name = Config.Name,
+				CreatedDate = Compkiller:GetDate()
+			}
 		};
-
-		writefile(Compkiller:_Path(Args.Directory , Config.Name) , HttpService:JSONEncode(Flags));
-	end;
-
-	function Args:LoadConfigFromString(str: string)
-		local decoded = HttpService:JSONDecode(str);
-
-		local Flags = Compkiller:GetConfig("KV");
-
-		for i,v in next , decoded do
-			if v and v.Flag then
-
-				local Value = Flags[v.Flag];
-
-				if Value then
-
-					if v.Value.Type == "NormalElement" then
-						Value.Functions:SetValue(v.Value.Value);
-
-					elseif v.Value.Type == "ColorPicker" then
-
-						local Color = Color3.new(v.Value.Color3.R,v.Value.Color3.G,v.Value.Color3.B);
-
-						local Transparency = v.Value.Transparency;
-
-						Value.Functions:SetValue(Color , Transparency);
-					end;
-				end;
+	
+		for k, v in pairs(Flags) do
+			if v.Functions and v.Functions.GetValue then
+				local raw = v.Functions:GetValue();
+	
+				Serialized[k] = {
+					Flag = k,
+					Value = {
+						Type = v.Type,
+						Value = raw,
+						State = (typeof(raw) == "boolean" and raw) or nil
+					}
+				};
 			end
-		end;
-	end;
+		end
+	
+		writefile(Compkiller:_Path(Args.Directory, Config.Name), HttpService:JSONEncode(Serialized));
+	end
+
+	function Args:LoadConfig(ConfigName: string)
+		local _path = Compkiller:_Path(Args.Directory, ConfigName);
+	
+		if isfile(_path) then
+			local info = readfile(_path);
+			local decoded = HttpService:JSONDecode(info);
+	
+			local Flags = Compkiller:GetConfig("KV");
+	
+			for i, v in next, decoded do
+				if v and v.Flag and Flags[v.Flag] then
+					local Value = Flags[v.Flag];
+	
+					if v.Value then
+						if v.Value.Type == "NormalElement" then
+							Value.Functions:SetValue(v.Value.Value);
+	
+						elseif v.Value.Type == "ColorPicker" then
+							local Color = Color3.new(
+								v.Value.Color3.R,
+								v.Value.Color3.G,
+								v.Value.Color3.B
+							);
+							local Transparency = v.Value.Transparency;
+							Value.Functions:SetValue(Color, Transparency);
+						end
+	
+						-- Apply toggle state explicitly if boolean
+						if v.Value.State ~= nil and typeof(v.Value.State) == "boolean" then
+							Value.Functions:SetValue(v.Value.State);
+						end
+					end
+				end
+			end
+		end
+	end
 
 	function Args:GetCurrentConfig()
 		return Compkiller:GetConfig("MK")
