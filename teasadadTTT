@@ -8516,6 +8516,19 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 		);
 	end
 
+	local Flags = Compkiller:GetConfig("KV")
+	
+	for flagName, flagData in pairs(Flags) do
+		if flagData.Functions and type(flagData.Functions.SetValue) == "function" then
+			local originalSet = flagData.Functions.SetValue
+	
+			flagData.Functions.SetValue = function(val, ...)
+				print("Setting:", flagName, "to", val)
+				return originalSet(val, ...)
+			end
+		end
+	end
+
 	function Args:LoadConfigFromString(str: string)
 		local decoded = HttpService:JSONDecode(str)
 		local Flags = Compkiller:GetConfig("KV")
