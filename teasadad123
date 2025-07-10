@@ -8494,7 +8494,7 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 			Author = LocalPlayer.Name,
 		});
 	
-		local Flags = Compkiller:GetConfig("MK");
+		local Flags = Compkiller.Flags; -- Direct access to your actual flags
 	
 		local Serialized = {
 			__INFORMATION = {
@@ -8509,14 +8509,28 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 			if v.Functions and v.Functions.GetValue then
 				local raw = v.Functions:GetValue();
 	
-				Serialized[k] = {
-					Flag = k,
-					Value = {
-						Type = v.Type,
-						Value = raw,
-						State = (typeof(raw) == "boolean" and raw) or nil
-					}
-				};
+				if v.Type == "ColorPicker" and typeof(raw) == "Color3" then
+					Serialized[k] = {
+						Flag = k,
+						Value = {
+							Type = "ColorPicker",
+							Color3 = {
+								R = raw.R,
+								G = raw.G,
+								B = raw.B
+							},
+							Transparency = v.Functions.Transparency or 0
+						}
+					};
+				else
+					Serialized[k] = {
+						Flag = k,
+						Value = {
+							Type = v.Type or "NormalElement",
+							Value = raw
+						}
+					};
+				end
 			end
 		end
 	
