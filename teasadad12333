@@ -8531,7 +8531,12 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 	
 					if v.Value then
 						if v.Value.Type == "NormalElement" then
-							Value.Functions:SetValue(v.Value.Value);
+							local val = v.Value.Value
+						
+							if type(val) == "boolean" or type(val) == "string" or type(val) == "number" then
+								Value.Functions:SetValue(val)
+							end
+						end
 	
 						elseif v.Value.Type == "ColorPicker" then
 							local Color = Color3.new(
