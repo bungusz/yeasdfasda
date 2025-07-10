@@ -8529,20 +8529,20 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 						local val = v.Value.Value
 					
 						if Value and type(Value) == "table" and Value.Functions and type(Value.Functions.SetValue) == "function" then
-							local current = Value.Functions:GetValue and Value.Functions:GetValue()
+							local current = Value.Functions.GetValue and Value.Functions:GetValue()
 					
-							if current ~= val and type(val) == "boolean" or type(val) == "string" or type(val) == "number" then
+							if current ~= val and (type(val) == "boolean" or type(val) == "string" or type(val) == "number") then
 								Value.Functions:SetValue(val)
 							end
 						else
 							warn("Missing or invalid Value.Functions for:", v.Flag)
 						end
 					end
-	
-					elseif v.Value.Type == "ColorPicker" then
+					
+					if v.Value.Type == "ColorPicker" then
 						local col = v.Value.Color3
 						local transparency = v.Value.Transparency
-	
+					
 						if col and Value.Functions and type(Value.Functions.SetValue) == "function" then
 							local color = Color3.new(col.R, col.G, col.B)
 							Value.Functions:SetValue(color, transparency)
