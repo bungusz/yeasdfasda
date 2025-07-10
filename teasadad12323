@@ -8516,49 +8516,41 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 		);
 	end
 
-	function Args:LoadConfig(ConfigName: string)
-		local _path = Compkiller:_Path(Args.Directory, ConfigName);
+	function Args:LoadConfigFromString(str: string)
+		local decoded = HttpService:JSONDecode(str)
+		local Flags = Compkiller:GetConfig("KV")
 	
-		if isfile(_path) then
-			local info = readfile(_path);
-			local decoded = HttpService:JSONDecode(info);
+		for _, v in next, decoded do
+			if v and v.Flag then
+				local Value = Flags[v.Flag]
 	
-			local Flags = Compkiller:GetConfig("KV");
+				if Value and type(Value) == "table" then
+					if v.Value and v.Value.Type == "NormalElement" then
+						local val = v.Value.Value
 	
-			for i, v in next, decoded do
-				if v and v.Flag and Flags[v.Flag] then
-					local Value = Flags[v.Flag];
-	
-					if v.Value then
-						if v.Value.Type == "NormalElement" then
-							local val = v.Value.Value
-						
-							if Value and type(Value) == "table" and Value.Functions and type(Value.Functions.SetValue) == "function" then
-								if type(val) == "boolean" or type(val) == "string" or type(val) == "number" then
-									Value.Functions:SetValue(val)
-								else
-									warn("Unexpected value type for flag:", v.Flag, type(val))
-								end
+						if Value.Functions and type(Value.Functions.SetValue) == "function" then
+							if type(val) == "boolean" or type(val) == "string" or type(val) == "number" then
+								Value.Functions:SetValue(val)
 							else
-								warn("Missing Value or SetValue for flag:", v.Flag)
+								warn("Unexpected value type for flag:", v.Flag, type(val))
 							end
+						else
+							warn("Missing SetValue function for flag:", v.Flag)
 						end
 	
-						elseif v.Value.Type == "ColorPicker" then
-							local Color = Color3.new(
-								v.Value.Color3.R,
-								v.Value.Color3.G,
-								v.Value.Color3.B
-							);
-							local Transparency = v.Value.Transparency;
-							Value.Functions:SetValue(Color, Transparency);
-						end
+					elseif v.Value.Type == "ColorPicker" then
+						local col = v.Value.Color3
+						local transparency = v.Value.Transparency
 	
-						-- Apply toggle state explicitly if boolean
-						if v.Value.State ~= nil and typeof(v.Value.State) == "boolean" then
-							Value.Functions:SetValue(v.Value.State);
+						if col and Value.Functions and type(Value.Functions.SetValue) == "function" then
+							local color = Color3.new(col.R, col.G, col.B)
+							Value.Functions:SetValue(color, transparency)
+						else
+							warn("Malformed color or missing SetValue for flag:", v.Flag)
 						end
 					end
+				else
+					warn("Missing or invalid Value structure for flag:", v.Flag)
 				end
 			end
 		end
