@@ -2785,13 +2785,18 @@ function Compkiller:_LoadOption(Value , TabSignal)
 			Blacklist = {}
 		});
 
+		if Config.Flag and Compkiller.Flags[Config.Flag] and Compkiller.Flags[Config.Flag]:GetValue() ~= nil then
+			warn("Keybind for flag '"..Config.Flag.."' is already set to:", Compkiller.Flags[Config.Flag]:GetValue());
+			return Compkiller.Flags[Config.Flag];
+		end
+	
 		local Keybind = Value:AddLink('Keybind' , Config.Default);
-
 		local IsBinding = false;
-
+	
 		local IsBlacklist = function(v)
 			return Config.Blacklist and (Config.Blacklist[v] or table.find(Config.Blacklist,v))
-		end;
+		end
+
 
 		Compkiller:_Input(Keybind.Root,function()
 			if IsBinding then
