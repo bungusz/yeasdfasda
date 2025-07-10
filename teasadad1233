@@ -8489,52 +8489,31 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 	};
 
 	function Args:WriteConfig(Config: WriteConfig)
-		Config = Compkiller.__CONFIG(Config, {
+		Config = Compkiller.__CONFIG(Config , {
 			Name = "Config",
 			Author = LocalPlayer.Name,
 		});
 	
-		local Flags = Compkiller.Flags; -- Direct access to your actual flags
+		local Flags = Compkiller:GetConfig("MK");
+		local FilteredFlags = {};
 	
-		local Serialized = {
-			__INFORMATION = {
-				Type = "Information",
-				Author = Config.Author,
-				Name = Config.Name,
-				CreatedDate = Compkiller:GetDate()
-			}
-		};
-	
-		for k, v in pairs(Flags) do
-			if v.Functions and v.Functions.GetValue then
-				local raw = v.Functions:GetValue();
-	
-				if v.Type == "ColorPicker" and typeof(raw) == "Color3" then
-					Serialized[k] = {
-						Flag = k,
-						Value = {
-							Type = "ColorPicker",
-							Color3 = {
-								R = raw.R,
-								G = raw.G,
-								B = raw.B
-							},
-							Transparency = v.Functions.Transparency or 0
-						}
-					};
-				else
-					Serialized[k] = {
-						Flag = k,
-						Value = {
-							Type = v.Type or "NormalElement",
-							Value = raw
-						}
-					};
-				end
+		for flagName, flagData in pairs(Flags) do
+			if flagData.Value ~= nil or flagData.Type == "ColorPicker" then
+				FilteredFlags[flagName] = flagData;
 			end
 		end
 	
-		writefile(Compkiller:_Path(Args.Directory, Config.Name), HttpService:JSONEncode(Serialized));
+		FilteredFlags["__INFORMATION"] = {
+			Type = "Information",
+			Author = Config.Author,
+			Name = Config.Name,
+			CreatedDate = Compkiller:GetDate()
+		};
+	
+		writefile(
+			Compkiller:_Path(Args.Directory , Config.Name),
+			HttpService:JSONEncode(FilteredFlags)
+		);
 	end
 
 	function Args:LoadConfig(ConfigName: string)
