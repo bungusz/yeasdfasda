@@ -8533,10 +8533,14 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 						if v.Value.Type == "NormalElement" then
 							local val = v.Value.Value
 						
-							if Value and Value.Functions and Value.Functions.SetValue then
+							if Value and type(Value) == "table" and Value.Functions and type(Value.Functions.SetValue) == "function" then
 								if type(val) == "boolean" or type(val) == "string" or type(val) == "number" then
 									Value.Functions:SetValue(val)
+								else
+									warn("Unexpected value type for flag:", v.Flag, type(val))
 								end
+							else
+								warn("Missing Value or SetValue for flag:", v.Flag)
 							end
 						end
 	
